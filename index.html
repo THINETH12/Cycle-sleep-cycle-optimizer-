@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cycle — Sleep &amp; Nap Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-rings" id="cycleRings" aria-hidden="true"></div>
+  <div class="hero-text">
+    <p class="eyebrow">Sleep Cycle Optimizer</p>
+    <h1>Wake up between cycles,<br>not in the middle of one.</h1>
+    <p class="hero-sub">Set your wake time and schedule. Cycle maps the 90-minute stages backward to a bedtime, finds real nap gaps in your day, and tells you when to cut off the coffee.</p>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- INPUT PANEL -->
+  <section class="panel" id="inputPanel">
+    <h2>Tonight</h2>
+
+    <div class="field">
+      <label for="wakeTime">Wake-up time</label>
+      <input type="time" id="wakeTime" value="07:00">
+    </div>
+
+    <div class="field">
+      <label for="sleepQuality">Last night's sleep quality</label>
+      <input type="range" id="sleepQuality" min="1" max="5" value="3">
+      <div class="range-labels"><span>Rough</span><span>Great</span></div>
+    </div>
+
+    <div class="field">
+      <label for="sensitivity">Caffeine sensitivity</label>
+      <select id="sensitivity">
+        <option value="low">Low — coffee doesn't affect my sleep much</option>
+        <option value="normal" selected>Normal</option>
+        <option value="high">High — even afternoon coffee keeps me up</option>
+      </select>
+    </div>
+
+    <h2 class="tasks-heading">Today's schedule</h2>
+    <div id="taskList" class="task-list"></div>
+    <button type="button" class="btn-ghost" id="addTaskBtn">+ Add meeting / class</button>
+
+    <button type="button" class="btn-primary" id="calcBtn">Build my schedule</button>
+  </section>
+
+  <!-- OUTPUT PANEL -->
+  <section class="panel output" id="outputPanel">
+    <div class="empty-state" id="emptyState">
+      <p>Your bedtime, nap windows, and caffeine cutoff will show up here once you build your schedule.</p>
+    </div>
+
+    <div id="results" class="results hidden">
+      <div class="result-block" id="bedtimeBlock">
+        <h3>Recommended bedtime</h3>
+        <div class="big-stat" id="bedtimeStat">—</div>
+        <p class="stat-sub" id="bedtimeSub"></p>
+        <div class="cycle-options" id="cycleOptions"></div>
+      </div>
+
+      <div class="result-block" id="napBlock">
+        <h3>Power nap windows</h3>
+        <div id="napList" class="nap-list"></div>
+      </div>
+
+      <div class="result-block" id="caffeineBlock">
+        <h3>Caffeine cutoff</h3>
+        <div class="big-stat" id="caffeineStat">—</div>
+        <p class="stat-sub" id="caffeineSub"></p>
+      </div>
+
+      <div class="result-block" id="debtBlock">
+        <h3>Weekly sleep debt</h3>
+        <div class="debt-log" id="debtLog"></div>
+        <div class="debt-actions">
+          <button type="button" class="btn-ghost small" id="addNightBtn">+ Log last night's sleep</button>
+          <button type="button" class="btn-ghost small" id="undoNightBtn" disabled>↺ Undo last log</button>
+        </div>
+        <div class="big-stat" id="debtStat">—</div>
+        <p class="stat-sub" id="debtSub"></p>
+      </div>
+
+      <div class="result-block" id="historyBlock">
+        <h3>Sleep trend (last 7 logged nights)</h3>
+        <div class="trend-summary" id="trendSummary"></div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+
+      <div class="result-block" id="forecastBlock">
+        <h3>Productivity forecast</h3>
+        <div class="forecast-bar"><div class="forecast-fill" id="forecastFill"></div></div>
+        <p class="stat-sub" id="forecastSub"></p>
+        <div class="forecast-curve" id="forecastCurve"></div>
+        <p class="curve-legend">Hour-by-hour predicted alertness · highlighted bars line up with a free nap window</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>Cycle · Graph sleep engine · Priority-Queue task scheduler · two-process alertness model · Stack + binary-search history</p>
+</footer>
+
+<script src="js/sleepEngine.js"></script>
+<script src="js/taskScheduler.js"></script>
+<script src="js/productivityForecast.js"></script>
+<script src="js/historyTracker.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
