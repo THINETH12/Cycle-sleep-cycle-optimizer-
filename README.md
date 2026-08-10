@@ -117,8 +117,8 @@ the manual UI test checklist.
 | Member | Student ID | Owns |
 |---|---|---|
 | W A T Nirmal | COHNDSE252F-022 | `sleepEngine.js`, `index.html`, `app.js` |
-| D M A Pamuditha | COHNDSE252F-020 | `taskScheduler.js` |
-| D Elangovan | COHNDSE252F-017 | `productivityForecast.js`, `css/style.css` |
+| D M A Pamuditha | COHNDSE252F-017 | `taskScheduler.js` |
+| D Elangovan | COHNDSE252F-020 | `productivityForecast.js`, `css/style.css` |
 | D W R Yasas | COHNDSE252F-021 | `historyTracker.js` |
 
 Built for the **Programming, Data Structures and Algorithms (PDSA)** module,
