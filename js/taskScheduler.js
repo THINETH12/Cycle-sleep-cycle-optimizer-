@@ -46,3 +46,28 @@ class PriorityQueue {
 }
 
 window.PriorityQueue = PriorityQueue;
+
+/**
+  TASK SCHEDULER
+ Stores the day's meetings/classes in chronological order.
+ */
+class TaskScheduler {
+  constructor() {
+    this.tasks = []; // {name, start: Date, end: Date, importance: 1-5}
+  }
+
+  /**
+   * @param {{name:string, start:Date, end:Date, importance:number}} task
+   */
+  addTask(task) {
+    this.tasks.push(task);
+    this.tasks.sort((a, b) => a.start - b.start); // keep chronological order
+  }
+
+  // orders the copy of today's task//
+  getTasks() {
+    return this.tasks.slice();
+  }
+}
+
+window.TaskScheduler = TaskScheduler;
