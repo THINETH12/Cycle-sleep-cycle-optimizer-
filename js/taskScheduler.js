@@ -14,7 +14,7 @@ class PriorityQueue {
     const top = this.heap[0];
     const last = this.heap.pop();
     if (this.heap.length > 0) {
-      this.heap[0] = last;git status
+      this.heap[0] = last;
       this._bubbleDown(0);
     }
     return top.item;
