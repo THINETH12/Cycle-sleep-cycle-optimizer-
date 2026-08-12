@@ -1,9 +1,3 @@
-/* ============================================================
-   MEMBER 3 — VISUAL DESIGN SYSTEM
-   Theme: night sky / celestial. One ring per sleep cycle in the
-   hero is the signature visual motif.
-   ============================================================ */
-
 :root {
   --ink: #0B1026;
   --ink-2: #141B3C;
@@ -32,7 +26,7 @@ body {
   line-height: 1.5;
 }
 
-/* ---------- Hero ---------- */
+/* Hero */
 .hero {
   position: relative;
   min-height: 46vh;
@@ -58,6 +52,12 @@ body {
   position: absolute;
   border-radius: 50%;
   border: 1px solid var(--moon-soft);
+  animation: ringPulse 6s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 .hero-text {
@@ -90,7 +90,7 @@ body {
   margin: 0;
 }
 
-/* ---------- Layout ---------- */
+/* Layout */
 .layout {
   max-width: 1080px;
   margin: 0 auto;
@@ -109,6 +109,12 @@ body {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 24px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.panel:hover {
+  border-color: var(--moon-soft);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 .panel h2 {
@@ -120,7 +126,7 @@ body {
 
 .tasks-heading { margin-top: 28px; }
 
-/* ---------- Form fields ---------- */
+/* Form fields */
 .field { margin-bottom: 18px; }
 
 .field label {
@@ -140,9 +146,22 @@ select {
   padding: 9px 10px;
   font-family: var(--font-body);
   font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-input[type="range"] { width: 100%; accent-color: var(--moon); }
+input[type="time"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--moon);
+  box-shadow: 0 0 0 3px var(--moon-soft);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--moon);
+  transition: opacity 0.2s ease;
+}
+input[type="range"]:hover { opacity: 0.9; }
 
 .range-labels {
   display: flex;
@@ -163,6 +182,17 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   padding: 8px;
   margin-bottom: 8px;
   font-size: 13px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: taskIn 0.25s ease;
+}
+
+.task-row:hover {
+  border-color: var(--moon-soft);
+}
+
+@keyframes taskIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .task-row input, .task-row select {
@@ -171,6 +201,7 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   color: var(--text);
   font-size: 13px;
   padding: 2px;
+  transition: none;
 }
 
 .task-row .remove-task {
@@ -179,16 +210,22 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   color: var(--bad);
   cursor: pointer;
   font-size: 15px;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
-/* ---------- Buttons ---------- */
+.task-row .remove-task:hover {
+  transform: scale(1.2);
+  color: #f29a9a;
+}
+
+/* Buttons */
 .btn-primary, .btn-ghost {
   font-family: var(--font-body);
   font-weight: 600;
   border-radius: 999px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .btn-primary {
@@ -200,7 +237,13 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   margin-top: 20px;
   border: none;
 }
-.btn-primary:hover { transform: translateY(-1px); }
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px var(--moon-soft);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
 
 .btn-ghost {
   background: transparent;
@@ -216,7 +259,7 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
 
 .debt-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 
-/* ---------- Output panel ---------- */
+/* Output panel */
 .output { display: flex; flex-direction: column; gap: 20px; }
 
 .empty-state {
@@ -226,7 +269,17 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   padding: 40px 12px;
 }
 
-.results.hidden, .hidden { display: none; }
+.hidden { display: none; }
+
+.results {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.results.show {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .result-block {
   border-top: 1px solid var(--line);
@@ -247,6 +300,7 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   font-size: 32px;
   font-weight: 600;
   color: var(--moon);
+  transition: color 0.3s ease;
 }
 
 .stat-sub { color: var(--text-dim); font-size: 13px; margin: 4px 0 0; }
@@ -264,6 +318,12 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   padding: 6px 12px;
   font-size: 12px;
   color: var(--text-dim);
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.cycle-chip:hover {
+  border-color: var(--moon);
+  color: var(--moon);
+  transform: translateY(-1px);
 }
 .cycle-chip.best { border-color: var(--moon); color: var(--moon); }
 
@@ -276,6 +336,11 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 13px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.nap-row:hover, .history-row:hover {
+  border-color: var(--moon-soft);
+  background: var(--panel);
 }
 .nap-row .score { color: var(--moon); font-weight: 600; }
 
@@ -301,6 +366,7 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
 .forecast-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--lavender), var(--moon));
+  transition: width 0.6s ease;
 }
 
 .forecast-curve {
@@ -316,6 +382,10 @@ input[type="range"] { width: 100%; accent-color: var(--moon); }
   border-radius: 3px 3px 0 0;
   opacity: 0.55;
   position: relative;
+  transition: height 0.5s ease, opacity 0.3s ease, background 0.3s ease;
+}
+.forecast-bar-col:hover {
+  opacity: 0.85;
 }
 .forecast-bar-col.low { background: var(--bad); opacity: 0.6; }
 .forecast-bar-col.nap { background: var(--moon); opacity: 0.9; }

@@ -28,6 +28,18 @@ class ProductivityForecastEngine {
 
     return Math.max(0, Math.min(100, Math.round(score)));
   }
+
+  buildDailyCurve(wakeTime, adjustments = {}, endHour = 23) {
+    const curve = [];
+    const startHour = wakeTime.getHours();
+    for (let h = startHour; h <= endHour; h++) {
+      const atTime = new Date(wakeTime);
+      atTime.setHours(h, 0, 0, 0);
+      const label = h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`;
+      curve.push({ hour: h, label, score: this.forecastAt(wakeTime, atTime, adjustments) });
+    }
+    return curve;
+  }
 }
 
 if (typeof window !== 'undefined') {
