@@ -14,6 +14,8 @@ class ProductivityForecastEngine {
     return 16 * main + 8 * dip;
   }
 
+  // Puts everything together to give one final energy score
+  // (starting energy - tiredness + daily pattern + sleep info)
   forecastAt(wakeTime, atTime, adjustments = {}) {
     const { sleepQuality = 3, debtHours = 0, cyclesAchieved = 5 } = adjustments;
     const hoursAwake = Math.max(0, (atTime - wakeTime) / 3600000);
@@ -28,8 +30,33 @@ class ProductivityForecastEngine {
 
     return Math.max(0, Math.min(100, Math.round(score)));
   }
+
+  // Calculates the energy score for every hour of the day (not just one moment)
+  buildDailyCurve(wakeTime, adjustments = {}, endHour = 23) {
+    const curve = [];
+    const startHour = wakeTime.getHours();
+    for (let h = startHour; h <= endHour; h++) {
+      const atTime = new Date(wakeTime);
+      atTime.setHours(h, 0, 0, 0);
+      const label = h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`;
+      curve.push({ hour: h, label, score: this.forecastAt(wakeTime, atTime, adjustments) });
+    }
+    return curve;
+  }
+
+  // Finds the hours where energy dropped too low (below 55 by default)
+  getLowEnergyHours(curve, threshold = 55) {
+    return curve.filter((p) => p.score < threshold).map((p) => p.hour);
+  }
+
+  // Averages all the hourly scores into one single "how was your day" score
+  getDailyScore(curve) {
+    if (curve.length === 0) return 0;
+    return Math.round(curve.reduce((s, p) => s + p.score, 0) / curve.length);
+  }
 }
 
+// Lets this code work in a web browser
 if (typeof window !== 'undefined') {
   window.ProductivityForecastEngine = ProductivityForecastEngine;
 }
