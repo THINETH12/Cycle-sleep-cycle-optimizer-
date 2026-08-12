@@ -1,14 +1,3 @@
-/**
- * ============================================================
- * MEMBER 1 — UI / INTEGRATION LAYER
- * Owns: index.html, css/style.css (design by Member 3), js/app.js
- * Consumes: SleepCycleGraph + SleepDebtCalculator      (Member 1 — Graph)
- *           PriorityQueue + TaskScheduler              (Member 2 — Priority Queue)
- *           ProductivityForecastEngine                 (Member 3 — two-process model)
- *           UndoStack + HistoryTracker                 (Member 4 — Stack + binary search)
- * ============================================================
- */
-
 const sleepGraph = new SleepCycleGraph();
 const debtCalc = new SleepDebtCalculator(8);
 const forecastEngine = new ProductivityForecastEngine();
@@ -16,7 +5,7 @@ const historyTracker = new HistoryTracker();
 const undoStack = new UndoStack();
 let taskRowCount = 0;
 
-// ---------- persistence (sleep debt log + history survive a page refresh) ----------
+// persistence (sleep debt log + history survive a page refresh
 function loadDebtLog() {
   const saved = localStorage.getItem('cycle_debt_log');
   if (saved) {
@@ -31,7 +20,7 @@ function saveDebtLog() {
   localStorage.setItem('cycle_debt_log', JSON.stringify(debtCalc.getLog()));
 }
 
-// ---------- hero rings (one per sleep cycle, Member 3's signature visual) ----------
+//  hero rings (one per sleep cycle, Member 3's signature visual) 
 function renderHeroRings() {
   const el = document.getElementById('cycleRings');
   const sizes = [90, 150, 210, 270, 330];
@@ -86,27 +75,27 @@ function fmtTime(date) {
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-// ---------- main calculation ----------
+// main calculation 
 function buildSchedule() {
   const wakeStr = document.getElementById('wakeTime').value || '07:00';
   const wakeTime = timeStringToDate(wakeStr, new Date());
   const sleepQuality = Number(document.getElementById('sleepQuality').value);
   const sensitivity = document.getElementById('sensitivity').value;
 
-  // Member 1 — Graph: bedtime options
+  
   const bedtimeOptions = sleepGraph.getBedtimeOptions(wakeTime);
   const best = bedtimeOptions.reduce((a, b) => (b.totalSleepHrs > a.totalSleepHrs ? b : a));
 
-  // Member 2 — Priority Queue: tasks, nap windows, caffeine cutoff
+ 
   const scheduler = new TaskScheduler();
   readTasksFromForm().forEach((t) => scheduler.addTask(t));
   const napWindows = scheduler.findNapWindows(20);
   const caffeine = scheduler.suggestCaffeineCutoff(best.bedtime, sensitivity);
 
-  // Member 4 — trend from history so far
+  
   const trend = historyTracker.getTrend(7);
 
-  // Member 3 — two-process model: hourly forecast
+  
   const debt = debtCalc.getWeeklyDebt();
   const curve = forecastEngine.buildDailyCurve(wakeTime, {
     sleepQuality,
@@ -119,7 +108,7 @@ function buildSchedule() {
   renderResults({ bedtimeOptions, best, napWindows, caffeine, curve, lowHours, dailyScore, trend });
 }
 
-// ---------- rendering ----------
+
 function renderResults({ bedtimeOptions, best, napWindows, caffeine, curve, lowHours, dailyScore, trend }) {
   document.getElementById('emptyState').classList.add('hidden');
   document.getElementById('results').classList.remove('hidden');
@@ -218,7 +207,7 @@ function undoLastNight() {
   renderHistoryBlock(historyTracker.getTrend(7));
 }
 
-// ---------- wire up ----------
+// wire up 
 document.getElementById('addTaskBtn').addEventListener('click', () => addTaskRow());
 document.getElementById('calcBtn').addEventListener('click', buildSchedule);
 document.getElementById('addNightBtn').addEventListener('click', logLastNight);

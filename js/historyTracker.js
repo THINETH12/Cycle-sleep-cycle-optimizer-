@@ -1,15 +1,3 @@
-/**
- * ============================================================
- * MEMBER 4 — HISTORY, UNDO & TRENDS
- * (COHNDSE252F-021, D W R Yasas)
- * Data structures: Stack (undo) + a date-sorted array searched
- *   with binary search (trend queries)
- * Owns: js/historyTracker.js
- * ============================================================
- *
- * No DOM dependency and no dependency on any other module — like
- * the other three, it can be unit tested standalone with plain Node.
- */
 
 /** Simple LIFO stack of loggable actions, used to support "Undo last night". */
 class UndoStack {
@@ -36,11 +24,7 @@ class UndoStack {
   }
 }
 
-/**
- * Keeps a date-sorted array of nightly sleep entries so that lookups
- * and rolling trend queries don't require re-scanning or re-sorting
- * the whole log every time.
- */
+
 class HistoryTracker {
   constructor() {
     this.entries = []; // [{date:'YYYY-MM-DD', hoursSlept:number}], kept sorted ascending by date
