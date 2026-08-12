@@ -1,19 +1,26 @@
 class ProductivityForecastEngine {
+  // Starting energy level before we adjust it (out of 100)
   constructor(baseline = 78) {
     this.baseline = baseline;
   }
 
+  // The longer you stay awake, the more tired you get.
+  // This function turns "hours awake" into a tiredness penalty.
   _homeostaticPressure(hoursAwake) {
     const capped = Math.max(0, hoursAwake);
     return 35 * (1 - Math.exp(-capped / 9));
   }
 
+  // Your energy naturally goes up and down during the day
+  // (like feeling sleepy after lunch). This creates that pattern.
   _circadianRhythm(hourOfDay) {
     const main = Math.cos(((hourOfDay - 16) / 24) * 2 * Math.PI);
     const dip = 0.35 * Math.cos(((hourOfDay - 14) / 12) * 2 * Math.PI);
     return 16 * main + 8 * dip;
   }
 
+  // Puts everything together to give one final energy score
+  // (starting energy - tiredness + daily pattern + sleep info)
   forecastAt(wakeTime, atTime, adjustments = {}) {
     const { sleepQuality = 3, debtHours = 0, cyclesAchieved = 5 } = adjustments;
     const hoursAwake = Math.max(0, (atTime - wakeTime) / 3600000);
@@ -29,6 +36,7 @@ class ProductivityForecastEngine {
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
+  // Calculates the energy score for every hour of the day (not just one moment)
   buildDailyCurve(wakeTime, adjustments = {}, endHour = 23) {
     const curve = [];
     const startHour = wakeTime.getHours();
@@ -40,11 +48,24 @@ class ProductivityForecastEngine {
     }
     return curve;
   }
+
+  // Finds the hours where energy dropped too low (below 55 by default)
+  getLowEnergyHours(curve, threshold = 55) {
+    return curve.filter((p) => p.score < threshold).map((p) => p.hour);
+  }
+
+  // Averages all the hourly scores into one single "how was your day" score
+  getDailyScore(curve) {
+    if (curve.length === 0) return 0;
+    return Math.round(curve.reduce((s, p) => s + p.score, 0) / curve.length);
+  }
 }
 
+// Lets this code work in a web browser
 if (typeof window !== 'undefined') {
   window.ProductivityForecastEngine = ProductivityForecastEngine;
 }
+// Lets this code work in Node.js (for testing)
 if (typeof module !== 'undefined') {
   module.exports = { ProductivityForecastEngine };
 }
