@@ -68,6 +68,54 @@ class TaskScheduler {
   getTasks() {
     return this.tasks.slice();
   }
+
+
+
+
+  //* POWER NAP WINDOW FINDER//
+   
+  
+  findNapWindows(minDuration = 20) {
+    const sorted = this.getTasks();
+    const windows = [];
+
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const gapStart = sorted[i].end;
+      const gapEnd = sorted[i + 1].start;
+      const gapMin = (gapEnd - gapStart) / 60000;
+      if (gapMin >= minDuration) {
+        windows.push({
+          start: gapStart,
+          end: gapEnd,
+          durationMin: Math.floor(gapMin),
+          score: this._napScore(gapStart, gapMin),
+        });
+      }
+    }
+
+    return windows.sort((a, b) => b.score - a.score);
+  }
+
+  /** Higher score = better nap slot. Post-lunch dip (13:00-15:00) is weighted up. */
+  _napScore(start, durationMin) {
+    const hour = start.getHours() + start.getMinutes() / 60;
+    const inDipWindow = hour >= 13 && hour <= 15;
+    let score = Math.min(durationMin, 30);
+    if (inDipWindow) score += 20;
+    return score;
+  }
+
+  /**
+   * CAFFEINE PLANNER
+   * Recommends a last-coffee time: a buffer before bedtime, sized by
+**/
+
+  suggestCaffeineCutoff(bedtime, sensitivity = 'normal') {
+    const bufferHoursBySensitivity = { low: 6, normal: 8, high: 10 };
+    const bufferHrs = bufferHoursBySensitivity[sensitivity] ?? 8;
+    const cutoff = new Date(bedtime.getTime() - bufferHrs * 3600000);
+    return { cutoff, bufferHrs };
+  }
 }
 
-window.TaskScheduler = TaskScheduler;
+  window.TaskScheduler = TaskScheduler;
