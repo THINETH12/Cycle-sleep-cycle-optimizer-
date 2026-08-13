@@ -92,8 +92,6 @@ function buildSchedule() {
   const napWindows = scheduler.findNapWindows(20);
   const caffeine = scheduler.suggestCaffeineCutoff(best.bedtime, sensitivity);
 
-  
-  const trend = historyTracker.getTrend(7);
 
   
   const debt = debtCalc.getWeeklyDebt();
@@ -105,7 +103,7 @@ function buildSchedule() {
   const lowHours = forecastEngine.getLowEnergyHours(curve);
   const dailyScore = forecastEngine.getDailyScore(curve);
 
-  renderResults({ bedtimeOptions, best, napWindows, caffeine, curve, lowHours, dailyScore, trend });
+  renderResults({ bedtimeOptions, best, napWindows, caffeine, curve, lowHours, dailyScore});
 }
 
 
@@ -138,7 +136,7 @@ function renderResults({ bedtimeOptions, best, napWindows, caffeine, curve, lowH
   document.getElementById('caffeineSub').textContent = `${caffeine.bufferHrs}h buffer before bedtime`;
 
   renderDebtBlock();
-  renderHistoryBlock(trend);
+  renderHistoryBlock();
 
   document.getElementById('forecastFill').style.width = `${dailyScore}%`;
   document.getElementById('forecastSub').textContent = `Daily productivity score: ${dailyScore}/100`;
@@ -165,11 +163,25 @@ function renderDebtBlock() {
   document.getElementById('undoNightBtn').disabled = !undoStack.canUndo();
 }
 
-function renderHistoryBlock(trend) {
+let showFullHistory = false;
+
+function renderHistoryBlock() {
+  const trend = showFullHistory
+    ? { entries: historyTracker.getAll() }
+    : historyTracker.getTrend(7);
+
+  document.getElementById('historyTitle').textContent = showFullHistory
+    ? `Full sleep history (${trend.entries.length} nights)`
+    : 'Sleep trend (last 7 logged nights)';
+
   const summary = document.getElementById('trendSummary');
-  summary.innerHTML = trend.entries.length
-    ? `<span>Avg: <b>${trend.avg}h</b></span><span>Best: <b>${trend.best.date} (${trend.best.hoursSlept}h)</b></span><span>Worst: <b>${trend.worst.date} (${trend.worst.hoursSlept}h)</b></span>`
-    : '<span>Log a few nights to see your trend.</span>';
+  if (!showFullHistory && trend.avg !== undefined) {
+    summary.innerHTML = trend.entries.length
+      ? `<span>Avg: <b>${trend.avg}h</b></span><span>Best: <b>${trend.best.date} (${trend.best.hoursSlept}h)</b></span><span>Worst: <b>${trend.worst.date} (${trend.worst.hoursSlept}h)</b></span>`
+      : '<span>Log a few nights to see your trend.</span>';
+  } else {
+    summary.innerHTML = '';
+  }
 
   document.getElementById('historyList').innerHTML = trend.entries.length
     ? trend.entries
@@ -177,8 +189,17 @@ function renderHistoryBlock(trend) {
         .reverse()
         .map((e) => `<div class="history-row"><span>${e.date}</span><span>${e.hoursSlept}h</span></div>`)
         .join('')
-    : '';
+    : '<p class="stat-sub">No nights logged yet.</p>';
+
+  document.getElementById('toggleHistoryBtn').textContent = showFullHistory
+    ? 'Show last 7 only'
+    : 'Show full history';
 }
+
+document.getElementById('toggleHistoryBtn').addEventListener('click', () => {
+  showFullHistory = !showFullHistory;
+  renderHistoryBlock();
+});
 
 function logLastNight() {
   const hours = prompt("How many hours did you sleep last night? (e.g. 6.5)");
@@ -194,7 +215,7 @@ function logLastNight() {
   undoStack.push({ date }); // Member 4 — remembers what to undo
   saveDebtLog();
   renderDebtBlock();
-  renderHistoryBlock(historyTracker.getTrend(7));
+  renderHistoryBlock();
 }
 
 function undoLastNight() {
@@ -204,7 +225,7 @@ function undoLastNight() {
   historyTracker.removeEntry(last.date);
   saveDebtLog();
   renderDebtBlock();
-  renderHistoryBlock(historyTracker.getTrend(7));
+  renderHistoryBlock();
 }
 
 // wire up 
@@ -218,4 +239,4 @@ loadDebtLog();
 addTaskRow({ name: 'Lecture', start: '09:00', end: '11:00', importance: 4 });
 addTaskRow({ name: 'Study block', start: '14:00', end: '15:00', importance: 2 });
 renderDebtBlock();
-renderHistoryBlock(historyTracker.getTrend(7));
+renderHistoryBlock();
