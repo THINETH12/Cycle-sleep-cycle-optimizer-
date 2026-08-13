@@ -110,6 +110,7 @@ function buildSchedule() {
 function renderResults({ bedtimeOptions, best, napWindows, caffeine, curve, lowHours, dailyScore, trend }) {
   document.getElementById('emptyState').classList.add('hidden');
   document.getElementById('results').classList.remove('hidden');
+  document.getElementById('results').classList.add('show');
 
   document.getElementById('bedtimeStat').textContent = fmtTime(best.bedtime);
   document.getElementById('bedtimeSub').textContent =
