@@ -1,13 +1,18 @@
 class ProductivityForecastEngine {
+  // Starting energy level before we adjust it (out of 100)
   constructor(baseline = 78) {
     this.baseline = baseline;
   }
 
+  // The longer you stay awake, the more tired you get.
+  // This function turns "hours awake" into a tiredness penalty.
   _homeostaticPressure(hoursAwake) {
     const capped = Math.max(0, hoursAwake);
     return 35 * (1 - Math.exp(-capped / 9));
   }
 
+  // Your energy naturally goes up and down during the day
+  // (like feeling sleepy after lunch). This creates that pattern.
   _circadianRhythm(hourOfDay) {
     const main = Math.cos(((hourOfDay - 16) / 24) * 2 * Math.PI);
     const dip = 0.35 * Math.cos(((hourOfDay - 14) / 12) * 2 * Math.PI);
@@ -60,6 +65,7 @@ class ProductivityForecastEngine {
 if (typeof window !== 'undefined') {
   window.ProductivityForecastEngine = ProductivityForecastEngine;
 }
+// Lets this code work in Node.js (for testing)
 if (typeof module !== 'undefined') {
   module.exports = { ProductivityForecastEngine };
 }

@@ -1,28 +1,14 @@
-/**
- * ============================================================
- * MEMBER 2 — TASK SCHEDULER & NAP/CAFFEINE PLANNER
- * (COHNDSE252F-020, D M A Pamuditha)
- * Data structure: Priority Queue (binary min-heap keyed by importance)
- * Owns: js/taskScheduler.js
- * ============================================================
- */
-
-/** Generic binary min-heap based Priority Queue. Lower priority value = popped first. */
+// js/taskScheduler.js - the heap fucntion 
 class PriorityQueue {
-  constructor() {
-    this.heap = []; // [{item, priority}]
-  }
-
+  constructor() { this.heap = []; }
   size() { return this.heap.length; }
   isEmpty() { return this.heap.length === 0; }
 
-  /** O(log n) */
   push(item, priority) {
     this.heap.push({ item, priority });
     this._bubbleUp(this.heap.length - 1);
   }
 
-  /** O(log n) — removes and returns the item with the lowest priority value */
   pop() {
     if (this.isEmpty()) return null;
     const top = this.heap[0];
@@ -34,10 +20,7 @@ class PriorityQueue {
     return top.item;
   }
 
-  /** O(1) */
-  peek() {
-    return this.isEmpty() ? null : this.heap[0].item;
-  }
+  peek() { return this.isEmpty() ? null : this.heap[0].item; }
 
   _bubbleUp(i) {
     while (i > 0) {
@@ -62,74 +45,77 @@ class PriorityQueue {
   }
 }
 
+window.PriorityQueue = PriorityQueue;
+
 /**
- * Stores the day's meetings/classes in a priority queue (keyed by importance,
- * highest importance = lowest priority value so it pops first), and derives
- * nap windows + a caffeine cutoff from them.
+  TASK SCHEDULER
+ Stores the day's meetings/classes in chronological order.
  */
 class TaskScheduler {
   constructor() {
-    this.pq = new PriorityQueue();
-    this.tasks = []; // flat list kept alongside the heap, for chronological scanning
-  }
-
-  /** @param {{name:string, start:Date, end:Date, importance:number}} task importance 1(low)-5(high) */
-  addTask(task) {
-    this.pq.push(task, 6 - task.importance); // invert so importance 5 -> priority 1 (pops first)
-    this.tasks.push(task);
-  }
-
-  /** Chronologically ordered copy of today's tasks. */
-  getTasks() {
-    return this.tasks.slice().sort((a, b) => a.start - b.start);
+    this.tasks = []; // {name, start: Date, end: Date, importance: 1-5}
   }
 
   /**
-   * Scans the gaps between chronologically ordered tasks for windows
-   * long enough to nap in, scoring the 1–3pm post-lunch dip higher.
-   * @param {number} minDuration - minimum gap length in minutes (default 20)
-   * @returns {{start:Date, end:Date, durationMin:number, score:number}[]}
+   * @param {{name:string, start:Date, end:Date, importance:number}} task
    */
+  addTask(task) {
+    this.tasks.push(task);
+    this.tasks.sort((a, b) => a.start - b.start); // keep chronological order
+  }
+
+  // orders the copy of today's task//
+  getTasks() {
+    return this.tasks.slice();
+  }
+
+
+
+
+  //* POWER NAP WINDOW FINDER//
+   
+  
   findNapWindows(minDuration = 20) {
     const sorted = this.getTasks();
     const windows = [];
 
-    const scoreWindow = (start, end) => {
-      const durationMin = Math.round((end - start) / 60000);
-      const midHour = new Date((start.getTime() + end.getTime()) / 2).getHours();
-      let score = Math.min(100, 40 + durationMin); // longer gaps score higher, capped
-      if (midHour >= 13 && midHour < 15) score += 25; // post-lunch dip bonus
-      return { start, end, durationMin, score: Math.min(100, score) };
-    };
-
     for (let i = 0; i < sorted.length - 1; i++) {
       const gapStart = sorted[i].end;
       const gapEnd = sorted[i + 1].start;
-      const durationMin = (gapEnd - gapStart) / 60000;
-      if (durationMin >= minDuration) windows.push(scoreWindow(gapStart, gapEnd));
+      const gapMin = (gapEnd - gapStart) / 60000;
+      if (gapMin >= minDuration) {
+        windows.push({
+          start: gapStart,
+          end: gapEnd,
+          durationMin: Math.floor(gapMin),
+          score: this._napScore(gapStart, gapMin),
+        });
+      }
     }
 
     return windows.sort((a, b) => b.score - a.score);
   }
 
+  /** Higher score = better nap slot. Post-lunch dip (13:00-15:00) is weighted up. */
+  _napScore(start, durationMin) {
+    const hour = start.getHours() + start.getMinutes() / 60;
+    const inDipWindow = hour >= 13 && hour <= 15;
+    let score = Math.min(durationMin, 30);
+    if (inDipWindow) score += 20;
+    return score;
+  }
+
   /**
-   * Recommends a last-coffee time: a fixed buffer before bedtime,
-   * sized by caffeine sensitivity.
-   * @param {Date} bedtime
-   * @param {'low'|'normal'|'high'} sensitivity
-   * @returns {{cutoff:Date, bufferHrs:number}}
-   */
+   * CAFFEINE PLANNER
+   * Recommends a last-coffee time: a buffer before bedtime, sized by
+**/
+
   suggestCaffeineCutoff(bedtime, sensitivity = 'normal') {
-    const bufferHrs = { low: 6, normal: 8, high: 10 }[sensitivity] ?? 8;
+    const bufferHoursBySensitivity = { low: 6, normal: 8, high: 10 };
+    const bufferHrs = bufferHoursBySensitivity[sensitivity] ?? 8;
     const cutoff = new Date(bedtime.getTime() - bufferHrs * 3600000);
     return { cutoff, bufferHrs };
   }
 }
 
-if (typeof window !== 'undefined') {
-  window.PriorityQueue = PriorityQueue;
   window.TaskScheduler = TaskScheduler;
-}
-if (typeof module !== 'undefined') {
-  module.exports = { PriorityQueue, TaskScheduler };
-}
