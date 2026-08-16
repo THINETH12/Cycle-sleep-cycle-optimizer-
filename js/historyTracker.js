@@ -1,18 +1,25 @@
+const MAX_TREND_DAYS = 7; // how many days to look back for a trend
+const DATE_COMPARISON_EQUAL = 0;
+const NOT_FOUND_INDEX = -1; // used when a date isn't found
 
-/** Simple LIFO stack of loggable actions, used to support "Undo last night". */
+// Stack for undo — last action added is first one removed
 class UndoStack {
   constructor() {
     this.stack = [];
   }
 
-  /** @param {*} action - anything describing what was just done (kept opaque to this class) */
   push(action) {
     this.stack.push(action);
   }
 
-  /** O(1) — removes and returns the most recent action, or null if empty */
   pop() {
-    return this.stack.length ? this.stack.pop() : null;
+    if (this.stack.length === 0) return null;
+    return this.stack.pop(); // removes and returns the last action
+  }
+
+  peek() {
+    if (this.stack.length === 0) return null;
+    return this.stack[this.stack.length - 1]; // just look, don't remove
   }
 
   canUndo() {
@@ -22,72 +29,124 @@ class UndoStack {
   size() {
     return this.stack.length;
   }
+
+  clear() {
+    this.stack = [];
+  }
 }
 
-
+// Stores sleep entries sorted by date, uses binary search to find them fast
 class HistoryTracker {
   constructor() {
-    this.entries = []; // [{date:'YYYY-MM-DD', hoursSlept:number}], kept sorted ascending by date
+    this.entries = [];
   }
 
-  /** Binary search for the insertion index that keeps `entries` sorted by date. O(log n) */
+  _isEmpty() {
+    return this.entries.length === 0;
+  }
+
+  _midpoint(lo, hi) {
+    return (lo + hi) >> 1; // middle index between lo and hi
+  }
+
+  // finds where a new date should be inserted to keep entries sorted
   _lowerBound(date) {
-    let lo = 0, hi = this.entries.length;
+    let lo = 0;
+    let hi = this.entries.length;
     while (lo < hi) {
-      const mid = (lo + hi) >> 1;
-      if (this.entries[mid].date < date) lo = mid + 1;
-      else hi = mid;
+      const mid = this._midpoint(lo, hi);
+      const midDate = this.entries[mid].date;
+      if (midDate < date) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
     }
     return lo;
   }
 
-  /** Binary search for an exact date match. Returns index, or -1 if not found. O(log n) */
+  // binary search for an exact date match
   _binarySearch(date) {
-    let lo = 0, hi = this.entries.length - 1;
+    let lo = 0;
+    let hi = this.entries.length - 1;
     while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      if (this.entries[mid].date === date) return mid;
-      if (this.entries[mid].date < date) lo = mid + 1;
-      else hi = mid - 1;
+      const mid = this._midpoint(lo, hi);
+      const midDate = this.entries[mid].date;
+      if (midDate === date) {
+        return mid;
+      }
+      if (midDate < date) {
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
     }
-    return -1;
+    return NOT_FOUND_INDEX;
   }
 
-  /** @param {{date:string, hoursSlept:number}} entry — inserted in sorted position, O(log n + n) */
   addEntry(entry) {
-    const idx = this._lowerBound(entry.date);
-    this.entries.splice(idx, 0, entry);
+    const insertIndex = this._lowerBound(entry.date);
+    this.entries.splice(insertIndex, 0, entry); // insert in sorted position
   }
 
-  /** Removes the entry for an exact date (used by Undo). Returns the removed entry or null. */
   removeEntry(date) {
-    const idx = this._binarySearch(date);
-    if (idx === -1) return null;
-    return this.entries.splice(idx, 1)[0];
+    const index = this._binarySearch(date);
+    if (index === NOT_FOUND_INDEX) return null;
+    const removed = this.entries.splice(index, 1);
+    return removed[0];
   }
 
-  /** @param {string} date @returns {{date,hoursSlept}|null} O(log n) */
   findByDate(date) {
-    const idx = this._binarySearch(date);
-    return idx === -1 ? null : this.entries[idx];
+    const index = this._binarySearch(date);
+    if (index === NOT_FOUND_INDEX) return null;
+    return this.entries[index];
   }
 
-  /**
-   * Rolling window stats over the most recent `days` entries.
-   * @param {number} days
-   * @returns {{avg:number, best:{date,hoursSlept}|null, worst:{date,hoursSlept}|null, entries:object[]}}
-   */
-  getTrend(days = 7) {
-    const recent = this.entries.slice(-days);
-    if (recent.length === 0) return { avg: 0, best: null, worst: null, entries: [] };
-    const avg = +(recent.reduce((s, e) => s + e.hoursSlept, 0) / recent.length).toFixed(1);
-    const best = recent.reduce((a, b) => (b.hoursSlept > a.hoursSlept ? b : a));
-    const worst = recent.reduce((a, b) => (b.hoursSlept < a.hoursSlept ? b : a));
-    return { avg, best, worst, entries: recent };
+  _recentEntries(days) {
+    return this.entries.slice(-days); // last N entries
+  }
+
+  _averageHours(entries) {
+    const total = entries.reduce((sum, entry) => sum + entry.hoursSlept, 0);
+    return +(total / entries.length).toFixed(1);
+  }
+
+  _bestNight(entries) {
+    return entries.reduce((best, current) =>
+      current.hoursSlept > best.hoursSlept ? current : best
+    );
+  }
+
+  _worstNight(entries) {
+    return entries.reduce((worst, current) =>
+      current.hoursSlept < worst.hoursSlept ? current : worst
+    );
+  }
+
+  _emptyTrend() {
+    return { avg: 0, best: null, worst: null, entries: [] };
+  }
+
+  // returns average, best, and worst sleep over recent days
+  getTrend(days = MAX_TREND_DAYS) {
+    const recent = this._recentEntries(days);
+    if (recent.length === 0) {
+      return this._emptyTrend();
+    }
+    return {
+      avg: this._averageHours(recent),
+      best: this._bestNight(recent),
+      worst: this._worstNight(recent),
+      entries: recent,
+    };
   }
 
   getAll() {
     return this.entries.slice();
+  }
+
+  count() {
+    return this.entries.length;
   }
 }
 
